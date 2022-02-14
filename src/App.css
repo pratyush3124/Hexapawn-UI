@@ -1,38 +1,67 @@
+.container {
+  height:100%;
+  width:100%;
+  background-color:dimgrey;
+}
+
 .App {
-  text-align: center;
+  display:grid;
+  place-content: center;
+  min-height:700px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.board{
+  position:relative;
+  width:450px;
+  height:450px;
+  z-index:0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.tw{
+  background-color: #eeeed5;
+  float:left;
+  height:150px;
+  width:150px;
+  z-index:0
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.tb{
+  background-color: #7d945d;
+  float:left;
+  height:150px;
+  width:150px;
+  z-index:0
 }
 
-.App-link {
-  color: #61dafb;
+.piece{
+  position:absolute;
+  height:150px;
+  width:150px;
+  background-size: 150px;
+  background-repeat: no-repeat;
+  z-index:1;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+.piece:hover{
+  cursor:pointer
+}
+
+.piece:active{
+  cursor:pointer
+}
+
+.piece-capture{
+  background: radial-gradient(transparent 0%, transparent 79%, rgba(20,85,0,0.3) 80%);
+}
+
+.place-available{
+  background: radial-gradient(rgba(20,85,30,0.5) 19%, rgba(0,0,0,0) 20%);
+}
+
+#pb{
+  background-image:url('./assets/Chess_pdt45.svg.png')
+}
+#pw{
+  background-image:url('./assets/Chess_plt45.svg.png')
 }
