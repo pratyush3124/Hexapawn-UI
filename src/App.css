@@ -59,6 +59,10 @@
   background: radial-gradient(rgba(20,85,30,0.5) 19%, rgba(0,0,0,0) 20%);
 }
 
+.piece-selected{
+  background-color: rgba(20,85,30,0.4);
+}
+
 #pb{
   background-image:url('./assets/Chess_pdt45.svg.png')
 }
