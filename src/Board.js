@@ -1,4 +1,4 @@
-import { useState, useRef} from 'react';
+import { useState, useRef, useEffect} from 'react';
 import './App.css'
 
 const Board = () => {
@@ -13,6 +13,7 @@ const Board = () => {
     { x: 2, y: 0, p: 'pb' },
     // { x: 1, y: 1, p: '', available:true}
   ]);
+  
 
   let [grab, setGrab] = useState(null);
   let [grabPos, setGrabPos] = useState({ x: -1, y: -1 });
@@ -21,25 +22,63 @@ const Board = () => {
   
   function setMovesGuide(a,b,c){
     // set move guides.
-    let peri = [];
+    let guides = [];
     let aval = pieces.find(el=>
-      el.x===a && el.y===b+c &&(el.p==='pw' || el.p==='pb'));
-    if (aval===undefined && b+c>=0 && b+c<3){peri.push({x:a, y:b+c, p:'', available:true})};
-    console.log(aval)
-    peri.push({x:a, y:b, p:'', selected:true})
-    setPieces(pieces.concat(peri))
+      el.x===a && el.y===b+c && el.p!==''
+    );
+    let capt1 = pieces.find(el=>
+      el.x===a-1 && el.y===b+c && el.p!==''
+    )
+    let capt2 = pieces.find(el=>
+      el.x===a+1 && el.y===b+c && el.p!==''
+    )
+
+    if (aval===undefined && b+c>=0 && b+c<3){
+      guides.push({x:a, y:b+c, p:'', available:true})
+    };
+    if (capt1!==undefined){
+      guides.push({x:a-1, y:b+c, p:'', capture:true})
+    };
+    if (capt2!==undefined){
+      guides.push({x:a+1, y:b+c, p:'', capture:true})
+    };
+
+    guides.push({x:a, y:b, p:'', selected:true})
+    setPieces(pieces.concat(guides))
   }
 
   function delMovesGuide(){
     // remove move guides.
     let dupe = pieces.slice();
     let aval = dupe.find(elem => elem.available);
-    let sel = dupe.find(elem => elem.selected);
     if (aval) {dupe.splice(dupe.indexOf(aval), 1)};
+
+    let sel = dupe.find(elem => elem.selected);
     if (sel) {dupe.splice(dupe.indexOf(sel), 1)};
+    
+    let capt1 = dupe.find(elem => elem.capture);
+    if (capt1) {dupe.splice(dupe.indexOf(sel), 1)};
+    let capt2 = dupe.find(elem => elem.capture);
+    if (capt2) {dupe.splice(dupe.indexOf(sel), 1)};
+    
     setPieces(dupe);
   }
-  
+
+  function validMove(a,b){
+    // checks whether a valid move
+    // if (grabPos.x===a && grabPos.y===b){
+    //   console.log('same');
+    // }
+    let dest = pieces.find(elem =>
+      elem.x === a && elem.y === b && elem.p==='' && (elem.capture||elem.available)
+    );
+    if (dest!==undefined){
+      if (dest.capture){return 'c'}
+      else if (dest.available){return 'a'}
+    }
+    return '';
+  }
+
   function grabPiece(e) {
     // when mouse clicks or starts dragging.
     const elem = e.target
@@ -50,7 +89,7 @@ const Board = () => {
       const y = e.clientY - boardRef.current.offsetTop;
       const a = (x - (x % 150)) / 150;
       const b = (y - (y % 150)) / 150;
-      const c = elem.id==='pw' ? -1 : 1;
+      const c = elem.id==='pb' ? 1 : -1;
       
       setMovesGuide(a,b,c);
 
@@ -78,17 +117,34 @@ const Board = () => {
       const a = (x - (x % 150)) / 150;
       const b = (y - (y % 150)) / 150;
 
-      if (a < 3 && a >= 0 && b < 3 && b >= 0) {
+      let valid = validMove(a,b);
+      if (valid!=='') {
+        
         let dupe = pieces.slice();
+        if (valid==='c'){
+          let dest = dupe.find(elem =>
+            elem.x===a && elem.y===b && elem.p!==''
+          );
+          dupe.splice(dupe.indexOf(dest), 1);
+          let childs = [].slice.call(boardRef.current.children);
+          let vict = childs.find(elem =>
+            elem.style.left===`${a*150}px` && elem.style.top===`${b*150}px` && elem.className==='piece '
+          );
+          vict.remove();
+        }
+        
         let cur = dupe.find(elem =>
-          elem.x === grabPos.x && elem.y === grabPos.y);
+          elem.x===grabPos.x && elem.y===grabPos.y && elem.p!==''
+        );
         cur.x = a; cur.y = b;
         setPieces(dupe);
-
+        
+        // placing in new position.
         grab.style.top = `${b*150}px`;
         grab.style.left= `${a*150}px`;
       }
       else {
+        // placing where it was grabbed from.
         grab.style.top = `${grabPos.y*150}px`;
         grab.style.left = `${grabPos.x*150}px`;
       }
