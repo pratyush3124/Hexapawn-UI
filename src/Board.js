@@ -10,12 +10,6 @@ const Board = () => {
     { x: 1, y: 0, p: 'pb' },
     { x: 2, y: 0, p: 'pb' },
   ]);
-  
-  const [guides, setGuides] = useState([
-    // { x: 0, y: 0, capture:true},
-    // { x: 1, y: 0, selected:true },
-    // { x: 1, y: 1, available:true},
-  ]);
 
   useEffect(() => {
     pieces.forEach((piece,i)=>{
@@ -25,10 +19,16 @@ const Board = () => {
         elem.style.zIndex = "0";
     })
   }, [pieces])
+  
+  const [guides, setGuides] = useState([
+    // { x: 0, y: 0, capture:true},
+    // { x: 1, y: 0, selected:true },
+    // { x: 1, y: 1, available:true},
+  ]);
 
-
-  let [grab, setGrab] = useState(null);
-  let [grabPos, setGrabPos] = useState({ x: -1, y: -1 });
+  const [move, setMove] = useState('pw')
+  const [grab, setGrab] = useState(null);
+  const [grabPos, setGrabPos] = useState({ x: -1, y: -1 });
 
   const boardRef = useRef(null);
 
@@ -75,13 +75,14 @@ const Board = () => {
     // when mouse clicks or starts dragging.
     const elem = e.target
     if (elem.className === 'piece') {
-      
       elem.style.left = `${e.clientX - 75 - boardRef.current.offsetLeft}px`;
       elem.style.top = `${e.clientY - 75 - boardRef.current.offsetTop}px`;
       
-      const c = elem.id === 'pb' ? 1 : -1;
-      setMovesGuide(a, b, c);
-      
+      if (move===elem.id){
+        const c = elem.id === 'pb' ? 1 : -1;
+        setMovesGuide(a, b, c);
+      }
+
       elem.style.zIndex = "2";
       setGrab(elem);
       setGrabPos({ x: a, y: b })
@@ -99,6 +100,7 @@ const Board = () => {
 
   function placePiece(e, a, b) {
     // placing grabbed piece.
+    let elem = e.target;
     const x = e.clientX - boardRef.current.offsetLeft;
     const y = e.clientY - boardRef.current.offsetTop;
     const c = (x - (x % 150)) / 150;
@@ -120,6 +122,7 @@ const Board = () => {
       );
   
       cur.x = c; cur.y = d;
+      setMove(elem.id==="pw"?"pb":"pw")
     }
     
     remMovesGuide();
@@ -130,9 +133,9 @@ const Board = () => {
 
   function makeBoard() {
     // makes the list of pieces.
-    let b = [];
+    let bds = [];
     for (let i = 0; i < pieces.length; i++) {
-      b.push(
+      bds.push(
         <Piece 
           key={i}
           id={pieces[i].p}
@@ -144,7 +147,7 @@ const Board = () => {
         />
       );
     }
-    return b;
+    return bds;
   }
 
   function makeGuides() {
