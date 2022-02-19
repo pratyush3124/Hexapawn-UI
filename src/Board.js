@@ -108,6 +108,13 @@ const Board = () => {
     let valid = validMove(c, d);
 
     if (valid!==""){
+      if (valid === 'c') {
+        let dest = dupe.find(elem =>
+          elem.x === c && elem.y === d
+        );
+        dupe.splice(dupe.indexOf(dest), 1);
+      }
+
       let cur = dupe.find(elem =>
         elem.x === grabPos.x && elem.y === grabPos.y
       );
