@@ -1,0 +1,10 @@
+
+Main gameplay is done.
+set game ai.
+
+create graph that updates after every move.
+click on graph node to go back to the move.
+graph indicates black move or white.
+graph indicates good(green) move or bad(red) or undiscovered(blue/white).
+
+graph in d3.js and cola.js.

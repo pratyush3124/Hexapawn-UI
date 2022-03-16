@@ -1,17 +1,28 @@
 .container {
-  height:100%;
-  width:100%;
-  background-color:dimgrey;
+  height: 100%;
+  width: 100%;
+  /* place-content: center; */
+  background-color: dimgrey;
+}
+
+.graph {
+  height:450px;
+  width:450px;
+  padding-right: 25px;
 }
 
 .App {
-  display:grid;
+  display: flex;
+  flex-direction: row;
+  min-height: 700px;
   place-content: center;
-  min-height:700px;
+  padding-top: 50px;
 }
 
 .board{
   position:relative;
+  min-width:450px;
+  min-height:450px;
   width:450px;
   height:450px;
   z-index:0;

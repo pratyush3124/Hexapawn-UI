@@ -164,7 +164,7 @@ const Board = () => {
 
       gds.push(
         <Guide 
-          key={i}
+          key = {i}
           type = {type}
           pos = {{ x:guides[i].x, y:guides[i].y }}
         />
