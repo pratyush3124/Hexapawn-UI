@@ -1,25 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import './App.css'
 
-const Board = () => {
-  const [pieces, setPieces] = useState([
-    { x: 0, y: 2, p: 'pw' },
-    { x: 1, y: 2, p: 'pw' },
-    { x: 2, y: 2, p: 'pw' },
-    { x: 0, y: 0, p: 'pb' },
-    { x: 1, y: 0, p: 'pb' },
-    { x: 2, y: 0, p: 'pb' },
-  ]);
+const Board = (props) => {
+  // props.pieces is in the parent component (App).
+  // its a state been passed down as props.
 
-  useEffect(() => {
-    pieces.forEach((piece,i)=>{
-        let elem = boardRef.current.children[i];
-        elem.style.left = `${piece.x*150}px`;
-        elem.style.top  = `${piece.y*150}px`;
-        elem.style.zIndex = "0";
-    })
-  }, [pieces])
-  
   const [guides, setGuides] = useState([
     // { x: 0, y: 0, capture:true},
     // { x: 1, y: 0, selected:true },
@@ -35,9 +20,9 @@ const Board = () => {
   function setMovesGuide(a, b, c) {
     // set move guides.
     let gds = [];
-    let aval = pieces.find(el => el.x === a && el.y === b + c);
-    let capt1 = pieces.find(el => el.x === a - 1 && el.y === b + c)
-    let capt2 = pieces.find(el => el.x === a + 1 && el.y === b + c)
+    let aval = props.pieces.find(el => el.x === a && el.y === b + c);
+    let capt1 = props.pieces.find(el => el.x === a - 1 && el.y === b + c)
+    let capt2 = props.pieces.find(el => el.x === a + 1 && el.y === b + c)
 
     if (aval === undefined && b + c >= 0 && b + c < 3) {
       gds.push({ x: a, y: b + c, available: true })
@@ -53,7 +38,7 @@ const Board = () => {
     setGuides(gds);
   }
 
-  function remMovesGuide(dupe) {
+  function remGuides(dupe) {
     // remove move guides.
     setGuides([]);
   }
@@ -77,8 +62,8 @@ const Board = () => {
     if (elem.className === 'piece') {
       elem.style.left = `${e.clientX - 75 - boardRef.current.offsetLeft}px`;
       elem.style.top = `${e.clientY - 75 - boardRef.current.offsetTop}px`;
-      
-      if (move===elem.id){
+
+      if (move === elem.id) {
         const c = elem.id === 'pb' ? 1 : -1;
         setMovesGuide(a, b, c);
       }
@@ -106,10 +91,14 @@ const Board = () => {
     const c = (x - (x % 150)) / 150;
     const d = (y - (y % 150)) / 150;
 
-    let dupe = pieces.slice();
+    let dupe = props.pieces.slice();
+  
     let valid = validMove(c, d);
 
-    if (valid!==""){
+    if (valid !== "") {
+      let mv = String.fromCharCode(97+c)+String(3-d);
+      props.move.current = mv;
+      console.log(mv)
       if (valid === 'c') {
         let dest = dupe.find(elem =>
           elem.x === c && elem.y === d
@@ -120,27 +109,26 @@ const Board = () => {
       let cur = dupe.find(elem =>
         elem.x === grabPos.x && elem.y === grabPos.y
       );
-  
-      cur.x = c; cur.y = d;
-      setMove(elem.id==="pw"?"pb":"pw")
-    }
-    
-    remMovesGuide();
-    setPieces(dupe);
-    setGrab(null);
 
+      cur.x = c; cur.y = d;
+      setMove(elem.id === "pw" ? "pb" : "pw")
+    }
+
+    remGuides();
+    props.setPieces(dupe);
+    setGrab(null);
   }
 
   function makeBoard() {
-    // makes the list of pieces.
+    // makes the list of props.pieces.
     let bds = [];
-    for (let i = 0; i < pieces.length; i++) {
+    for (let i = 0; i < props.pieces.length; i++) {
       bds.push(
-        <Piece 
+        <Piece
           key={i}
-          id={pieces[i].p}
-          pos={{ x: pieces[i].x, y: pieces[i].y }}
-          piece={pieces[i].p}
+          id={props.pieces[i].p}
+          pos={{ x: props.pieces[i].x, y: props.pieces[i].y }}
+          piece={props.pieces[i].p}
           grabPiece={grabPiece}
           movePiece={movePiece}
           placePiece={placePiece}
@@ -152,7 +140,7 @@ const Board = () => {
 
   function makeGuides() {
     let gds = [];
-    for (let i=0; i<guides.length; i++) {
+    for (let i = 0; i < guides.length; i++) {
       let type;
       if (guides[i].available) {
         type = 'place-available';
@@ -163,10 +151,10 @@ const Board = () => {
       }
 
       gds.push(
-        <Guide 
-          key = {i}
-          type = {type}
-          pos = {{ x:guides[i].x, y:guides[i].y }}
+        <Guide
+          key={i}
+          type={type}
+          pos={{ x: guides[i].x, y: guides[i].y }}
         />
       )
     }
@@ -202,8 +190,8 @@ const Guide = (props) => {
   return (
     // guide div with respective image.
     <div
-      className = {`piece ${props.type}`}
-      style = {{ left: props.pos.x*150, top: props.pos.y*150 }}
+      className={`piece ${props.type}`}
+      style={{ left: props.pos.x * 150, top: props.pos.y * 150 }}
     ></div>
   )
 }

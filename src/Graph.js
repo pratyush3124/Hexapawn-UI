@@ -1,137 +1,138 @@
 import './App.css';
 import * as d3 from 'd3';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
-function Graph() {
-	var width = 500;
-	var height = 500;
+function Graph(props) {
+  var width = 500;
+  var height = 500;
 
-	let nodes = [
-		{ name: 1, c: true },
-		{ name: 2, c: false },
-		{ name: 3, c: true },
-		{ name: 4, c: false },
-		{ name: 5, c: true },
-		{ name: 6, c: false },
-	]
+  let nodes = props.history;
 
-	let links = [
-		{ source: nodes[0], target: nodes[1] },
-		{ source: nodes[1], target: nodes[2] },
-		{ source: nodes[2], target: nodes[0] },
-		{ source: nodes[2], target: nodes[3] },
-		{ source: nodes[2], target: nodes[4] },
-		{ source: nodes[2], target: nodes[5] },
-	]
+  const [links, setLinks] = useState([]);
 
-	var graphRef = useRef();
-	var simulation = useRef();
-	var node = useRef();
-	var link = useRef();
+  var graphRef = useRef();
 
-	useEffect(() => {
-		console.log(graphRef.current.children[0])
+  var simulation = useRef();
+  var node = useRef();
+  var link = useRef();
 
-		var svg = d3.select(graphRef.current.children[0])
-			.attr("viewBox", [-width / 2, -height / 2, width, height]);
+  useEffect(() => {
+    console.log("initial graph")
 
-		link.current = svg.append("g")
-			.selectAll("line");
+    var svg = d3.select(graphRef.current.children[0])
+      .attr("viewBox", [-width / 2, -height / 2, width, height]);
 
-		node.current = svg.append("g")
-			.selectAll("circle");
+    link.current = svg.append("g")
+      .selectAll("line");
 
-		simulation.current = d3.forceSimulation()
-			.force("link", d3.forceLink().id(d => d.id).distance(50).strength(1))
-			.force("charge", d3.forceManyBody().strength(-1000))
-			// .force("center", d3.forceCenter())
-			.force("x", d3.forceX())
-			.force("y", d3.forceY())
-			.on("tick", ticked);
+    node.current = svg.append("g")
+      .selectAll("circle");
 
-		function ticked() {
-			node.current.attr("cx", d => d.x)
-				.attr("cy", d => d.y)
+    simulation.current = d3.forceSimulation()
+      .force("link", d3.forceLink().id(d => d.id).distance(50).strength(1))
+      .force("charge", d3.forceManyBody().strength(-1000))
+      // .force("center", d3.forceCenter())
+      .force("x", d3.forceX())
+      .force("y", d3.forceY())
+      .on("tick", ticked);
 
-			link.current.attr("x1", d => d.source.x)
-				.attr("y1", d => d.source.y)
-				.attr("x2", d => d.target.x)
-				.attr("y2", d => d.target.y);
-		}
+    function ticked() {
+      node.current.attr("cx", d => d.x)
+        .attr("cy", d => d.y)
 
-		update()
+      link.current.attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+    }
 
-	}, []);
+    update()
 
-	var update = function () {
-		console.log(graphRef.current);
+  }, []);
 
-		simulation.current.nodes(nodes);
-		simulation.current.force("link").links(links);
-		simulation.current.alpha(1).restart();
+  useEffect(() => {
+    // console.log("change")
+    // click()
+    setLinks((prevLinks)=>[...prevLinks, {
+      "source": nodes[0],
+      "target": nodes[nodes.length-1]
+    }])
+    // update();
+  }, [props.history])
 
-		node.current = node.current
-			.data(nodes, d => d.id)
-			.join(enter => enter.append("circle"))
-			.attr("fill", d => d.c ? "#000" : "#fff")
-			.attr("stroke", d => d.c ? "#fff" : "#000")
-			.attr("r", 10)
-			.call(drag(simulation.current))
+  useEffect(() => {
+    // console.log(links);
+    update();
+  }, [links])
 
-		link.current = link.current
-			.data(links)
-			.join("line")
-			.attr("stroke", "white")
-			.attr("stroke-opacity", 1)
-			.attr("stroke-width", 3)
-	}
+  var update = function () {
+    console.log("updating");
 
-	function drag(simulation) {
-		function dragstarted(event, d) {
-			if (!event.active) simulation.alphaTarget(0.3).restart();
-			d.fx = d.x;
-			d.fy = d.y;
-		}
+    simulation.current.nodes(nodes);
+    simulation.current.force("link").links(links);
+    simulation.current.alpha(1).restart();
 
-		function dragged(event, d) {
-			d.fx = event.x;
-			d.fy = event.y;
-		}
+    node.current = node.current
+      .data(nodes, d => d.id)
+      .join(enter => enter.append("circle"))
+      .attr("fill", d => d.color)
+      // .attr("stroke", d => d.c ? "#fff" : "#000")
+      .attr("r", d => d.id === "center" ? 15 : 10)
+      .call(drag(simulation.current))
 
-		function dragended(event, d) {
-			if (!event.active) simulation.alphaTarget(0);
-			d.fx = null;
-			d.fy = null;
-		}
-		return d3.drag()
-			.on("start", dragstarted)
-			.on("drag", dragged)
-			.on("end", dragended);
-	}
+    link.current = link.current
+      .data(links)
+      .join("line")
+      .attr("stroke", "white")
+      .attr("stroke-opacity", 1)
+      .attr("stroke-width", 3)
+  }
+
+  function drag(simulation) {
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+    return d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended);
+  }
+
+  const click = () => {
+    // console.log("clicked");
+    // nodes.push({
+    //   "id": nodes.length,
+    //   "c": "black",
+    // });
+    // links.push({
+    //   "source": nodes[0],
+    //   "target": nodes[nodes.length - 1],
+    // });
+    // console.log(nodes);
+    // console.log(links);
+    update()
+  };
 
 
-	let prev = true;
-
-	const click = () => {
-		nodes.push({
-			"id": nodes.length,
-			c: !prev
-		});
-		prev = !prev;
-		links.push({
-			"source": nodes[0],
-			"target": nodes[nodes.length - 1],
-		});
-		update()
-	};
-
-
-	return (
-		<div ref={graphRef} className="graph">
-			<svg id="mySvg" height="450" width="450" style={{ "backgroundColor": "gray" }}></svg>
-			<button id="update" onClick={click}>Update</button>
-		</div>
-	)
+  return (
+    <div ref={graphRef} className="graph">
+      <svg id="mySvg" height="450" width="450" style={{ "backgroundColor": "gray" }}></svg>
+      <button id="update" onClick={click}>Update</button>
+    </div>
+  )
 }
 
 export default Graph;

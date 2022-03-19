@@ -14,7 +14,7 @@
 .App {
   display: flex;
   flex-direction: row;
-  min-height: 700px;
+  min-height: 650px;
   place-content: center;
   padding-top: 50px;
 }
@@ -38,6 +38,7 @@
 
 .tb{
   background-color: #7d945d;
+  /* background-color: #1e7055; */
   float:left;
   height:150px;
   width:150px;
