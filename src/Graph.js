@@ -17,7 +17,7 @@ function Graph(props) {
   var link = useRef();
 
   useEffect(() => {
-    console.log("initial graph")
+    // console.log("initial graph")
 
     var svg = d3.select(graphRef.current.children[0])
       .attr("viewBox", [-width / 2, -height / 2, width, height]);
@@ -51,12 +51,14 @@ function Graph(props) {
   }, []);
 
   useEffect(() => {
-    // console.log("change")
-    // click()
-    setLinks((prevLinks)=>[...prevLinks, {
-      "source": nodes[0],
-      "target": nodes[nodes.length-1]
-    }])
+    // console.log("graph")
+    let last = nodes[nodes.length-1];
+    if (last.parent!=="") {
+      setLinks((prevLinks)=>[...prevLinks, {
+        "source": nodes.find((val)=>val.id===last.parent),
+        "target": last
+      }])
+    }
     // update();
   }, [props.history])
 
@@ -66,7 +68,7 @@ function Graph(props) {
   }, [links])
 
   var update = function () {
-    console.log("updating");
+    // console.log("updating");
 
     simulation.current.nodes(nodes);
     simulation.current.force("link").links(links);
@@ -75,9 +77,17 @@ function Graph(props) {
     node.current = node.current
       .data(nodes, d => d.id)
       .join(enter => enter.append("circle"))
-      .attr("fill", d => d.color)
-      // .attr("stroke", d => d.c ? "#fff" : "#000")
-      .attr("r", d => d.id === "center" ? 15 : 10)
+      .attr("fill", d => {
+        if (d.id==="CCC") {return "#1e7055"}
+        else if (d.color==="pw") {return "white"}
+        else {return "black"}
+      })
+      .attr("stroke-width", d => d.selected ? 5 : 0)
+      .attr("stroke", "#c2c2c2")
+      .attr("r", d => d.selected ? 15 : 10)
+      .on("dblclick", (d, a)=>{
+        props.goPast(a.id);
+      })
       .call(drag(simulation.current))
 
     link.current = link.current
@@ -111,26 +121,9 @@ function Graph(props) {
       .on("end", dragended);
   }
 
-  const click = () => {
-    // console.log("clicked");
-    // nodes.push({
-    //   "id": nodes.length,
-    //   "c": "black",
-    // });
-    // links.push({
-    //   "source": nodes[0],
-    //   "target": nodes[nodes.length - 1],
-    // });
-    // console.log(nodes);
-    // console.log(links);
-    update()
-  };
-
-
   return (
     <div ref={graphRef} className="graph">
       <svg id="mySvg" height="450" width="450" style={{ "backgroundColor": "gray" }}></svg>
-      <button id="update" onClick={click}>Update</button>
     </div>
   )
 }

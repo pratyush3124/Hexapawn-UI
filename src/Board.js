@@ -11,7 +11,7 @@ const Board = (props) => {
     // { x: 1, y: 1, available:true},
   ]);
 
-  const [move, setMove] = useState('pw')
+  var move = props.color;
   const [grab, setGrab] = useState(null);
   const [grabPos, setGrabPos] = useState({ x: -1, y: -1 });
 
@@ -96,9 +96,8 @@ const Board = (props) => {
     let valid = validMove(c, d);
 
     if (valid !== "") {
-      let mv = String.fromCharCode(97+c)+String(3-d);
-      props.move.current = mv;
-      console.log(mv)
+      var mv = String.fromCharCode(97+grabPos.x)+String.fromCharCode(97+c)+String(3-d);
+      // console.log(mv)
       if (valid === 'c') {
         let dest = dupe.find(elem =>
           elem.x === c && elem.y === d
@@ -111,11 +110,11 @@ const Board = (props) => {
       );
 
       cur.x = c; cur.y = d;
-      setMove(elem.id === "pw" ? "pb" : "pw")
     }
-
+    
     remGuides();
-    props.setPieces(dupe);
+    // props.setPieces({"data":dupe});
+    props.makeMove(dupe, mv);
     setGrab(null);
   }
 
