@@ -28,6 +28,17 @@
   z-index:0;
 }
 
+.movement{
+  height:100px;
+  width:50px;
+  padding:1em;
+}
+
+.moveButtons{
+  margin:1em;
+  height:40px;
+}
+
 .tw{
   background-color: #eeeed5;
   float:left;
@@ -53,7 +64,6 @@
   background-repeat: no-repeat;
   z-index:1;
 }
-
 
 .piece:hover{
   cursor:pointer

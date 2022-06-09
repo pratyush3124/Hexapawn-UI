@@ -4,14 +4,17 @@ import BackBoard from './BackBoard.js';
 import Graph from './Graph.js';
 import { useRef, useState, useEffect } from 'react';
 
+// Always use copies of 2d arrays or arrays of objects when changing.
+// Pointers\refrences and stuff messes things up.
+
 function App() {
 
   const [history, setHistory] = useState([
     {
       "parent": "",
-      "color": "pw",
+      "color": "pb",
       "id": "CCC",
-      "selected":true,
+      "selected": true,
       "data": [
         { x: 0, y: 2, p: 'pw' },
         { x: 1, y: 2, p: 'pw' },
@@ -35,105 +38,123 @@ function App() {
   );
 
   const [color, setColor] = useState("pw");
-  const [pointer, setPointer] = useState("CCC");
+  
+  const appRef = useRef();
 
-  useEffect(() => { console.log("history", history )}, [history])
+  useEffect(() => {
+    let a = document.getElementsByClassName("App")[0];
+    a.addEventListener("keydown", (e)=>{
+      if(e.key==="ArrowLeft"){goBack()}
+      else if(e.key==="ArrowRight"){goForward()}
+      else{console.log(e)}
+    });
+  }, [])
+
+  // useEffect(() => { console.log("history", history) }, [history])s
   // useEffect(() => { console.log("pieces", pieces) }, [pieces])
 
-  // useEffect(() => {
-  //   let curPieces = history.find(element => element.id === pointer)
-
-  //   if (curPieces === undefined) {
-  //     setHistory((pre) => {
-  //       let a = pre.map((x) => x)
-  //       a.push(
-  //         {
-  //           "parent": pointer.slice(0, -3),
-  //           "color": color,
-  //           "id": pointer,
-  //           "selected":false,
-  //           "data": pieces.map((a) => { return { ...a } })
-  //         }
-  //       );
-  //       return a;
-  //     });
-  //     setColor(prev => prev === 'pw' ? 'pb' : 'pw')
-  //   } else {
-  //     setPieces(curPieces.data);
-  //     setColor(curPieces.color==='pw'?'pb':'pw');
-  //   }
-  // }, [pointer]);
+  useEffect(() => {
+    update();
+  }, [history])
 
   useEffect(() => {
     pieces.forEach((piece, i) => {
-      let elem = boardRef.current.children[1].children[i];
+      let elem = appRef.current.children[1].children[1].children[i];
       elem.style.left = `${piece.x * 150}px`;
       elem.style.top = `${piece.y * 150}px`;
       elem.style.zIndex = "0";
     })
   }, [pieces]);
 
-  const boardRef = useRef();
+  function update(){
+    // sets pieces and colors.
+    let current = history.find(elem => elem.selected);
+    setColor(current.color === "pw" ? "pb" : "pw");
+    setPieces(current.data.map(x => { return { ...x } }));
+  }
 
   function goPast(id) {
-    console.log("going back")
-    var dt;
-    var cl;
+    // console.log("going back")
     setHistory(prevHistory => {
       // making the past node selected
-      let a = prevHistory.map(x=>x);
+      let a = prevHistory.map(x => x);
       for (let elem of a) {
         if (elem.id === id) {
-          // console.log(elem)
           elem.selected = true;
-          cl = elem.color;
-          dt = elem.data;
         } else {
-          elem.selected = false;          
+          elem.selected = false;
         }
       }
       return a
     });
-    setColor(cl==='pw'?'pb':'pw');
-    setPieces(dt.map(x=>{return {...x}}));
-
-    // setPointer(id);
   }
 
-  function makeMove(data, cur) {
-    setPieces(data); // make the pieces on the board
+  function makeMove(data, childId) {
+    if (childId !== undefined) {
+      let parent = history.find(elem => elem.selected);
+      let child = history.find(elem => elem.id === parent.id + childId);
 
-    if (cur !== undefined) {
+      if (child !== undefined) {
+        goPast(parent.id + childId)
+        return;
+      }
+
       setHistory(prevHistory => {
         // add new move to history
-        let prev = prevHistory.find(elem => elem.selected);
-        let a = prevHistory.map(x=> x)
+        let parent = prevHistory.find(elem => elem.selected);
+        let a = prevHistory.map(x => x)
+
         for (let elem of a) {
           elem.selected = false;
         }
         a.push(
-        {
-          "parent": prev.id,
-          "color": color,
-          "id": prev.id+cur,
-          "selected":true,
-          "data":data.map(x=>{return{...x}}),
-        })
+          {
+            "parent": parent.id,
+            "color": color,
+            "id": parent.id + childId,
+            "selected": true,
+            "data": data.map(x => { return { ...x } }),
+          })
         return a;
       });
-      setColor(prev => prev === 'pw' ? 'pb' : 'pw')
-
-      // setPointer(prev => prev + cur);
+    } else {
+      update();
     }
   };
 
+  function press(e){
+    console.log(e);
+  }
+
+  function goBack(){
+    for (let elem of history){
+      let child = history.find(el => el.id===elem.parent);
+      if (child!==undefined && elem.selected){
+        goPast(elem.parent);
+      }
+    }
+  };
+
+  function goForward(){
+    for (let elem of history){
+      let child = history.find(el => el.parent===elem.id);
+      if (child!==undefined && elem.selected){
+        goPast(child.id)
+      }
+    }
+  }
+
   return (
     <div className="container">
-      <div className="App">
+      <div className="App" ref={appRef} tabIndex="0">
         <Graph pieces={pieces} history={history} goPast={goPast} />
-        <div ref={boardRef} className="boardGroup">
+        <div className="boardGroup">
           <BackBoard size={3} />
           <Board pieces={pieces} makeMove={makeMove} color={color} />
+        </div>
+        <div className="movement">
+          <button className="moveButtons" onClick={goBack}>Prev</button>
+          <button className="moveButtons" onClick={goForward}>Next</button>
         </div>
       </div>
     </div>

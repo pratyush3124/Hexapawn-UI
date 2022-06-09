@@ -84,7 +84,8 @@ function Graph(props) {
       })
       .attr("stroke-width", d => d.selected ? 5 : 0)
       .attr("stroke", "#c2c2c2")
-      .attr("r", d => d.selected ? 15 : 10)
+      .attr("r", d => d.selected ? 12 : 10)
+      .classed("fixed", d => d.id==="CCC")
       .on("dblclick", (d, a)=>{
         props.goPast(a.id);
       })
@@ -100,20 +101,26 @@ function Graph(props) {
 
   function drag(simulation) {
     function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
+      // if (d.id!=="CCC") {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      // }
     }
 
     function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
+      // if (d.id!=="CCC") {
+        d.fx = event.x;
+        d.fy = event.y;
+      // }
     }
 
     function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
+      // if (d.id!=="CCC") {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      // }
     }
     return d3.drag()
       .on("start", dragstarted)

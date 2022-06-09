@@ -11,31 +11,44 @@ const Board = (props) => {
     // { x: 1, y: 1, available:true},
   ]);
 
-  var move = props.color;
+  var color = props.color;
   const [grab, setGrab] = useState(null);
   const [grabPos, setGrabPos] = useState({ x: -1, y: -1 });
 
   const boardRef = useRef(null);
 
-  function setMovesGuide(a, b, c) {
-    // set move guides.
-    let gds = [];
-    let aval = props.pieces.find(el => el.x === a && el.y === b + c);
-    let capt1 = props.pieces.find(el => el.x === a - 1 && el.y === b + c)
-    let capt2 = props.pieces.find(el => el.x === a + 1 && el.y === b + c)
-
+  function findMoves(a, b, pieces) {
+    let c = color === "pb" ? 1 : -1;
+    let moves = [];
+    let aval = pieces.find(el => el.x === a && el.y === b + c);
+    let capt1 = pieces.find(el => el.x === a - 1 && el.y === b + c)
+    let capt2 = pieces.find(el => el.x === a + 1 && el.y === b + c)
     if (aval === undefined && b + c >= 0 && b + c < 3) {
-      gds.push({ x: a, y: b + c, available: true })
+      moves.push({ x: a, y: b + c, available: true })
     };
-    if (capt1 !== undefined) {
-      gds.push({ x: a - 1, y: b + c, capture: true })
+    if (capt1 !== undefined && capt1.p!==color) {
+      moves.push({ x: a - 1, y: b + c, capture: true })
     };
-    if (capt2 !== undefined) {
-      gds.push({ x: a + 1, y: b + c, capture: true })
+    if (capt2 !== undefined && capt2.p!==color) {
+      moves.push({ x: a + 1, y: b + c, capture: true })
     };
+    return moves;
+  }
 
-    gds.push({ x: a, y: b, selected: true })
-    setGuides(gds);
+  function findAllMoves(pieces) {
+    var moves = [];
+    pieces.forEach(el => {
+      if (el.p===color){
+        moves.push(...findMoves(el.x, el.y, pieces))
+      }
+    })
+    return moves;
+  }
+
+  function setMovesGuide(a, b) {
+    // set move guides.
+    let possibleMoves = findMoves(a,b, props.pieces);
+    setGuides(possibleMoves);
   }
 
   function remGuides(dupe) {
@@ -56,6 +69,35 @@ const Board = (props) => {
     return '';
   }
 
+  function checkWin(pieces) {
+    // 1. no more moves possible
+    // 2. all pieces captured of opponent.
+    // 3. piece reaches last rank.
+    let win = 0;
+
+    if (findAllMoves(pieces).length===0){
+      win = 1;
+    }
+
+    pieces.forEach(el => {
+      if ((el.y === 0 && el.p === "pw") || (el.y === 2 && el.p === "pb")) {
+        win = 1;
+      }
+    })
+
+    if (pieces.find(el => el.p === 'pw') === undefined) {
+      win = 1;
+    }
+    if (pieces.find(el => el.p === 'pb') === undefined) {
+      win = 1;
+    }
+
+    if (win) {
+      console.log("won", color);
+    }
+
+  }
+
   function grabPiece(e, a, b) {
     // when mouse clicks or starts dragging.
     const elem = e.target
@@ -63,9 +105,9 @@ const Board = (props) => {
       elem.style.left = `${e.clientX - 75 - boardRef.current.offsetLeft}px`;
       elem.style.top = `${e.clientY - 75 - boardRef.current.offsetTop}px`;
 
-      if (move === elem.id) {
+      if (color === elem.id) {
         const c = elem.id === 'pb' ? 1 : -1;
-        setMovesGuide(a, b, c);
+        setMovesGuide(a, b);
       }
 
       elem.style.zIndex = "2";
@@ -91,12 +133,12 @@ const Board = (props) => {
     const c = (x - (x % 150)) / 150;
     const d = (y - (y % 150)) / 150;
 
-    let dupe = props.pieces.slice();
-  
+    let dupe = props.pieces.map((x) => { return { ...x } });
+
     let valid = validMove(c, d);
 
     if (valid !== "") {
-      var mv = String.fromCharCode(97+grabPos.x)+String.fromCharCode(97+c)+String(3-d);
+      var mv = String.fromCharCode(97 + grabPos.x) + String.fromCharCode(97 + c) + String(3 - d);
       // console.log(mv)
       if (valid === 'c') {
         let dest = dupe.find(elem =>
@@ -109,9 +151,11 @@ const Board = (props) => {
         elem.x === grabPos.x && elem.y === grabPos.y
       );
 
+
       cur.x = c; cur.y = d;
     }
-    
+
+    checkWin(dupe);
     remGuides();
     // props.setPieces({"data":dupe});
     props.makeMove(dupe, mv);
